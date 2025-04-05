@@ -141,6 +141,33 @@ public class EmployeeService {
         return employees;
     }
     
+    public Employee getEmployeeByUserId(int userId) {
+        // First get the user's email
+        String userEmailSql = "SELECT email FROM users WHERE user_id = ?";
+        try (PreparedStatement userStmt = connection.prepareStatement(userEmailSql)) {
+            userStmt.setInt(1, userId);
+            ResultSet userRs = userStmt.executeQuery();
+            
+            if (userRs.next()) {
+                String email = userRs.getString("email");
+                
+                // Then find employee with matching email
+                String employeeSql = "SELECT * FROM employees WHERE email = ?";
+                try (PreparedStatement empStmt = connection.prepareStatement(employeeSql)) {
+                    empStmt.setString(1, email);
+                    ResultSet empRs = empStmt.executeQuery();
+                    
+                    if (empRs.next()) {
+                        return mapResultSetToEmployee(empRs);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
     private Employee mapResultSetToEmployee(ResultSet rs) throws SQLException {
         Employee employee = new Employee();
         employee.setEmployeeId(rs.getInt("employee_id"));

@@ -182,7 +182,7 @@ public class MainMenu {
                 viewProfile(user);
                 break;
             case 2:
-                markAttendance(user);
+                showAttendanceMenu(user);
                 break;
             case 3:
                 viewAttendanceHistory(user);
@@ -331,33 +331,192 @@ public class MainMenu {
         System.out.println("Last Login: " + (user.getLastLogin() != null ? user.getLastLogin() : "Never"));
     }
     
-    private void markAttendance(User user) {
+    private void showAttendanceMenu(User currentUser) {
+        while (true) {
+            System.out.println("\n=== Attendance Management ===");
+            System.out.println("1. Mark Attendance (Check-in/Check-out)");
+            System.out.println("2. Apply for Leave");
+            System.out.println("3. View Attendance History");
+            System.out.println("4. View Leave History");
+            System.out.println("0. Back to Main Menu");
+            System.out.print("Enter your choice: ");
+            
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+            
+            switch (choice) {
+                case 1:
+                    handleAttendance(currentUser);
+                    break;
+                case 2:
+                    handleLeaveApplication(currentUser);
+                    break;
+                case 3:
+                    viewAttendanceHistory(currentUser);
+                    break;
+                case 4:
+                    viewLeaveHistory(currentUser);
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+    
+    private void handleAttendance(User currentUser) {
         System.out.println("\n=== Mark Attendance ===");
-        System.out.println("1. Check In");
-        System.out.println("2. Check Out");
-        System.out.println("0. Back");
+        System.out.println("1. Check-in");
+        System.out.println("2. Check-out");
         System.out.print("Enter your choice: ");
         
         int choice = scanner.nextInt();
         scanner.nextLine(); // Consume newline
         
+        // Get employee ID for the current user
+        Employee employee = employeeService.getEmployeeByUserId(currentUser.getUserId());
+        if (employee == null) {
+            System.out.println("Employee record not found.");
+            return;
+        }
+        
         switch (choice) {
             case 1:
-                checkIn(user);
+                if (attendanceService.markAttendance(employee.getEmployeeId(), java.time.LocalDateTime.now())) {
+                    System.out.println("Check-in successful!");
+                } else {
+                    System.out.println("Check-in failed. You may have already checked in today.");
+                }
                 break;
             case 2:
-                checkOut(user);
+                if (attendanceService.updateCheckOut(employee.getEmployeeId(), java.time.LocalDateTime.now())) {
+                    System.out.println("Check-out successful!");
+                } else {
+                    System.out.println("Check-out failed. You may not have checked in today.");
+                }
                 break;
-            case 0:
-                return;
             default:
-                System.out.println("Invalid choice. Please try again.");
+                System.out.println("Invalid choice.");
         }
     }
     
-    private void viewAttendanceHistory(User user) {
+    private void handleLeaveApplication(User currentUser) {
+        System.out.println("\n=== Apply for Leave ===");
+        
+        // Get employee ID for the current user
+        Employee employee = employeeService.getEmployeeByUserId(currentUser.getUserId());
+        if (employee == null) {
+            System.out.println("Employee record not found.");
+            return;
+        }
+        
+        // Check leave balance
+        if (employee.getLeaveBalance() <= 0) {
+            System.out.println("You have no leave balance remaining.");
+            return;
+        }
+        
+        System.out.println("Current leave balance: " + employee.getLeaveBalance() + " days");
+        
+        System.out.print("Enter leave date (YYYY-MM-DD): ");
+        String dateStr = scanner.nextLine();
+        LocalDate leaveDate;
+        try {
+            leaveDate = LocalDate.parse(dateStr);
+        } catch (Exception e) {
+            System.out.println("Invalid date format.");
+            return;
+        }
+        
+        System.out.println("\nLeave Types:");
+        System.out.println("1. Annual Leave");
+        System.out.println("2. Sick Leave");
+        System.out.println("3. Unpaid Leave");
+        System.out.print("Enter leave type (1-3): ");
+        
+        int typeChoice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        
+        String leaveType;
+        switch (typeChoice) {
+            case 1:
+                leaveType = "Annual";
+                break;
+            case 2:
+                leaveType = "Sick";
+                break;
+            case 3:
+                leaveType = "Unpaid";
+                break;
+            default:
+                System.out.println("Invalid leave type.");
+                return;
+        }
+        
+        System.out.print("Enter leave reason: ");
+        String leaveReason = scanner.nextLine();
+        
+        if (attendanceService.markLeave(employee.getEmployeeId(), leaveDate, leaveType, leaveReason)) {
+            System.out.println("Leave application submitted successfully!");
+        } else {
+            System.out.println("Leave application failed. Please try again.");
+        }
+    }
+    
+    private void viewAttendanceHistory(User currentUser) {
         System.out.println("\n=== Attendance History ===");
-        // Implementation for viewing attendance history
+        
+        // Get employee ID for the current user
+        Employee employee = employeeService.getEmployeeByUserId(currentUser.getUserId());
+        if (employee == null) {
+            System.out.println("Employee record not found.");
+            return;
+        }
+        
+        List<Attendance> attendances = attendanceService.getEmployeeAttendance(employee.getEmployeeId());
+        if (attendances.isEmpty()) {
+            System.out.println("No attendance records found.");
+            return;
+        }
+        
+        System.out.println("\nDate\t\tCheck-in\t\tCheck-out\t\tStatus");
+        System.out.println("------------------------------------------------------------");
+        for (Attendance attendance : attendances) {
+            if (!attendance.isLeaveRecord()) {
+                System.out.printf("%s\t%s\t%s\t%s\n",
+                    attendance.getCheckIn().toLocalDate(),
+                    attendance.getCheckIn().toLocalTime(),
+                    attendance.getCheckOut() != null ? attendance.getCheckOut().toLocalTime() : "Not checked out",
+                    attendance.getStatus());
+            }
+        }
+    }
+    
+    private void viewLeaveHistory(User currentUser) {
+        System.out.println("\n=== Leave History ===");
+        
+        // Get employee ID for the current user
+        Employee employee = employeeService.getEmployeeByUserId(currentUser.getUserId());
+        if (employee == null) {
+            System.out.println("Employee record not found.");
+            return;
+        }
+        
+        List<Attendance> leaves = attendanceService.getLeaveHistory(employee.getEmployeeId());
+        if (leaves.isEmpty()) {
+            System.out.println("No leave records found.");
+            return;
+        }
+        
+        System.out.println("\nDate\t\tType\t\tReason");
+        System.out.println("----------------------------------------");
+        for (Attendance leave : leaves) {
+            System.out.printf("%s\t%s\t%s\n",
+                leave.getLeaveDate(),
+                leave.getLeaveType(),
+                leave.getLeaveReason());
+        }
     }
     
     private void viewPayrollHistory(User user) {
@@ -579,16 +738,6 @@ public class MainMenu {
     private void generatePayrollReport() {
         System.out.println("\n=== Payroll Report ===");
         // Implementation for generating payroll report
-    }
-    
-    private void checkIn(User user) {
-        System.out.println("\n=== Check In ===");
-        // Implementation for checking in
-    }
-    
-    private void checkOut(User user) {
-        System.out.println("\n=== Check Out ===");
-        // Implementation for checking out
     }
     
     public static void main(String[] args) {
