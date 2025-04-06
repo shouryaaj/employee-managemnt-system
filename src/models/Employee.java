@@ -2,6 +2,7 @@ package models;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 public class Employee {
     private int employeeId;
@@ -13,6 +14,7 @@ public class Employee {
     private String department;
     private String position;
     private LocalDate startDate;
+    private BigDecimal basicSalary;
     private String emergencyContactName;
     private String emergencyContactPhone;
     private int leaveBalance;
@@ -20,11 +22,13 @@ public class Employee {
     private LocalDateTime updatedAt;
     
     // Constructors
-    public Employee() {}
+    public Employee() {
+        this.basicSalary = BigDecimal.ZERO;
+    }
     
     public Employee(int employeeId, String firstName, String lastName, String email, 
                    String phone, String address, String department, String position, 
-                   LocalDate startDate, String emergencyContactName, 
+                   LocalDate startDate, BigDecimal basicSalary, String emergencyContactName, 
                    String emergencyContactPhone, int leaveBalance) {
         this.employeeId = employeeId;
         this.firstName = firstName;
@@ -35,6 +39,7 @@ public class Employee {
         this.department = department;
         this.position = position;
         this.startDate = startDate;
+        this.basicSalary = basicSalary;
         this.emergencyContactName = emergencyContactName;
         this.emergencyContactPhone = emergencyContactPhone;
         this.leaveBalance = leaveBalance;
@@ -113,6 +118,14 @@ public class Employee {
         this.startDate = startDate;
     }
     
+    public BigDecimal getBasicSalary() {
+        return basicSalary;
+    }
+    
+    public void setBasicSalary(BigDecimal basicSalary) {
+        this.basicSalary = basicSalary;
+    }
+    
     public String getEmergencyContactName() {
         return emergencyContactName;
     }
@@ -160,7 +173,7 @@ public class Employee {
     
     @Override
     public String toString() {
-        return String.format("Employee ID: %d%nName: %s %s%nEmail: %s%nDepartment: %s%nPosition: %s%nStart Date: %s",
-            employeeId, firstName, lastName, email, department, position, startDate);
+        return String.format("Employee ID: %d%nName: %s %s%nEmail: %s%nDepartment: %s%nPosition: %s%nBasic Salary: $%.2f%nStart Date: %s",
+            employeeId, firstName, lastName, email, department, position, basicSalary, startDate);
     }
 }

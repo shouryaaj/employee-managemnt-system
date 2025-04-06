@@ -19,7 +19,12 @@ public class Payroll {
     private String bankName;
     
     // Constructors
-    public Payroll() {}
+    public Payroll() {
+        this.basicSalary = BigDecimal.ZERO;
+        this.allowances = BigDecimal.ZERO;
+        this.deductions = BigDecimal.ZERO;
+        this.netSalary = BigDecimal.ZERO;
+    }
     
     public Payroll(int payrollId, int employeeId, LocalDate payPeriodStart, 
                   LocalDate payPeriodEnd, BigDecimal basicSalary, 
@@ -30,9 +35,9 @@ public class Payroll {
         this.employeeId = employeeId;
         this.payPeriodStart = payPeriodStart;
         this.payPeriodEnd = payPeriodEnd;
-        this.basicSalary = basicSalary;
-        this.allowances = allowances;
-        this.deductions = deductions;
+        this.basicSalary = basicSalary != null ? basicSalary : BigDecimal.ZERO;
+        this.allowances = allowances != null ? allowances : BigDecimal.ZERO;
+        this.deductions = deductions != null ? deductions : BigDecimal.ZERO;
         this.paymentDate = paymentDate;
         this.paymentStatus = paymentStatus;
         this.paymentMethod = paymentMethod;
@@ -61,19 +66,19 @@ public class Payroll {
     
     public BigDecimal getBasicSalary() { return basicSalary; }
     public void setBasicSalary(BigDecimal basicSalary) { 
-        this.basicSalary = basicSalary;
+        this.basicSalary = basicSalary != null ? basicSalary : BigDecimal.ZERO;
         calculateNetSalary();
     }
     
     public BigDecimal getAllowances() { return allowances; }
     public void setAllowances(BigDecimal allowances) { 
-        this.allowances = allowances;
+        this.allowances = allowances != null ? allowances : BigDecimal.ZERO;
         calculateNetSalary();
     }
     
     public BigDecimal getDeductions() { return deductions; }
     public void setDeductions(BigDecimal deductions) { 
-        this.deductions = deductions;
+        this.deductions = deductions != null ? deductions : BigDecimal.ZERO;
         calculateNetSalary();
     }
     

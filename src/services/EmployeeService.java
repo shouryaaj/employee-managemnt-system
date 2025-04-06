@@ -16,9 +16,9 @@ public class EmployeeService {
     
     public boolean addEmployee(Employee employee) {
         String sql = "INSERT INTO employees (first_name, last_name, email, phone, address, " +
-                    "department, position, start_date, emergency_contact_name, " +
+                    "department, position, start_date, basic_salary, emergency_contact_name, " +
                     "emergency_contact_phone, leave_balance) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, employee.getFirstName());
@@ -29,9 +29,10 @@ public class EmployeeService {
             stmt.setString(6, employee.getDepartment());
             stmt.setString(7, employee.getPosition());
             stmt.setDate(8, Date.valueOf(employee.getStartDate()));
-            stmt.setString(9, employee.getEmergencyContactName());
-            stmt.setString(10, employee.getEmergencyContactPhone());
-            stmt.setInt(11, employee.getLeaveBalance());
+            stmt.setBigDecimal(9, employee.getBasicSalary());
+            stmt.setString(10, employee.getEmergencyContactName());
+            stmt.setString(11, employee.getEmergencyContactPhone());
+            stmt.setInt(12, employee.getLeaveBalance());
             
             int affectedRows = stmt.executeUpdate();
             
@@ -83,7 +84,7 @@ public class EmployeeService {
     public boolean updateEmployee(Employee employee) {
         String sql = "UPDATE employees SET first_name = ?, last_name = ?, email = ?, " +
                     "phone = ?, address = ?, department = ?, position = ?, " +
-                    "start_date = ?, emergency_contact_name = ?, " +
+                    "start_date = ?, basic_salary = ?, emergency_contact_name = ?, " +
                     "emergency_contact_phone = ?, leave_balance = ? " +
                     "WHERE employee_id = ?";
         
@@ -96,10 +97,11 @@ public class EmployeeService {
             stmt.setString(6, employee.getDepartment());
             stmt.setString(7, employee.getPosition());
             stmt.setDate(8, Date.valueOf(employee.getStartDate()));
-            stmt.setString(9, employee.getEmergencyContactName());
-            stmt.setString(10, employee.getEmergencyContactPhone());
-            stmt.setInt(11, employee.getLeaveBalance());
-            stmt.setInt(12, employee.getEmployeeId());
+            stmt.setBigDecimal(9, employee.getBasicSalary());
+            stmt.setString(10, employee.getEmergencyContactName());
+            stmt.setString(11, employee.getEmergencyContactPhone());
+            stmt.setInt(12, employee.getLeaveBalance());
+            stmt.setInt(13, employee.getEmployeeId());
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -179,6 +181,7 @@ public class EmployeeService {
         employee.setDepartment(rs.getString("department"));
         employee.setPosition(rs.getString("position"));
         employee.setStartDate(rs.getDate("start_date").toLocalDate());
+        employee.setBasicSalary(rs.getBigDecimal("basic_salary"));
         employee.setEmergencyContactName(rs.getString("emergency_contact_name"));
         employee.setEmergencyContactPhone(rs.getString("emergency_contact_phone"));
         employee.setLeaveBalance(rs.getInt("leave_balance"));

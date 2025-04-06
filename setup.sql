@@ -1,9 +1,9 @@
--- Create database
-CREATE DATABASE IF NOT EXISTS employee_management;
+DROP DATABASE IF EXISTS employee_management;
+CREATE DATABASE employee_management;
 USE employee_management;
 
 -- Users table
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(256) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Employees table
-CREATE TABLE IF NOT EXISTS employees (
+CREATE TABLE employees (
     employee_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS employees (
 );
 
 -- Attendance table
-CREATE TABLE IF NOT EXISTS attendance (
+CREATE TABLE attendance (
     attendance_id INT PRIMARY KEY AUTO_INCREMENT,
     employee_id INT,
     check_in DATETIME,
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS attendance (
 );
 
 -- Payroll table
-CREATE TABLE IF NOT EXISTS payroll (
+CREATE TABLE payroll (
     payroll_id INT PRIMARY KEY AUTO_INCREMENT,
     employee_id INT,
     pay_period_start DATE NOT NULL,
@@ -73,6 +73,3 @@ CREATE TABLE IF NOT EXISTS payroll (
 INSERT INTO users (username, password, salt, email, role, is_active) 
 VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 
         'salt123', 'admin@example.com', 'ADMIN', true); 
-
-USE employee_management;
-DESCRIBE employees; 

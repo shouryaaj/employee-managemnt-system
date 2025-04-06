@@ -5,6 +5,7 @@ import models.*;
 import java.util.Scanner;
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 public class MainMenu {
     private Scanner scanner;
@@ -553,6 +554,9 @@ public class MainMenu {
         System.out.print("Enter start date (YYYY-MM-DD): ");
         employee.setStartDate(LocalDate.parse(scanner.nextLine()));
         
+        System.out.print("Enter basic salary: ");
+        employee.setBasicSalary(new BigDecimal(scanner.nextLine()));
+        
         System.out.print("Enter emergency contact name: ");
         employee.setEmergencyContactName(scanner.nextLine());
         
@@ -717,17 +721,149 @@ public class MainMenu {
     
     private void generatePayroll() {
         System.out.println("\n=== Generate Payroll ===");
-        // Implementation for generating payroll
+        
+        // Get employee ID
+        System.out.print("Enter employee ID: ");
+        int employeeId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        
+        // Verify employee exists
+        Employee employee = employeeService.getEmployee(employeeId);
+        if (employee == null) {
+            System.out.println("Employee not found.");
+            return;
+        }
+        
+        // Get pay period dates
+        System.out.print("Enter pay period start date (YYYY-MM-DD): ");
+        String startDateStr = scanner.nextLine();
+        System.out.print("Enter pay period end date (YYYY-MM-DD): ");
+        String endDateStr = scanner.nextLine();
+        
+        LocalDate startDate, endDate;
+        try {
+            startDate = LocalDate.parse(startDateStr);
+            endDate = LocalDate.parse(endDateStr);
+            
+            if (endDate.isBefore(startDate)) {
+                System.out.println("End date cannot be before start date.");
+                return;
+            }
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            return;
+        }
+        
+        // Generate payroll
+        if (payrollService.generatePayroll(employeeId, startDate, endDate)) {
+            System.out.println("Payroll generated successfully!");
+            
+            // Display the generated payroll details
+            List<Payroll> payrolls = payrollService.getEmployeePayrollHistory(employeeId);
+            if (!payrolls.isEmpty()) {
+                Payroll latestPayroll = payrolls.get(0); // Get the most recent payroll
+                System.out.println("\nPayroll Details:");
+                System.out.println("Employee: " + employee.getFullName());
+                System.out.println("Period: " + startDate + " to " + endDate);
+                System.out.println("Basic Salary: $" + latestPayroll.getBasicSalary());
+                System.out.println("Allowances: $" + latestPayroll.getAllowances());
+                System.out.println("Deductions: $" + latestPayroll.getDeductions());
+                System.out.println("Net Salary: $" + latestPayroll.getNetSalary());
+                System.out.println("Status: " + latestPayroll.getPaymentStatus());
+            }
+        } else {
+            System.out.println("Failed to generate payroll. Please try again.");
+        }
     }
     
     private void viewAllPayroll() {
-        System.out.println("\n=== All Payroll ===");
-        // Implementation for viewing all payroll
+        System.out.println("\n=== All Payroll Records ===");
+        
+        List<Employee> employees = employeeService.getAllEmployees();
+        if (employees.isEmpty()) {
+            System.out.println("No employees found.");
+            return;
+        }
+        
+        for (Employee employee : employees) {
+            List<Payroll> payrolls = payrollService.getEmployeePayrollHistory(employee.getEmployeeId());
+            if (!payrolls.isEmpty()) {
+                System.out.println("\nEmployee: " + employee.getFullName());
+                System.out.println("----------------------------------------");
+                System.out.printf("%-12s %-12s %-12s %-12s %-10s%n", 
+                    "Start Date", "End Date", "Basic Salary", "Net Salary", "Status");
+                
+                for (Payroll payroll : payrolls) {
+                    System.out.printf("%-12s %-12s $%-11.2f $%-11.2f %-10s%n",
+                        payroll.getPayPeriodStart(),
+                        payroll.getPayPeriodEnd(),
+                        payroll.getBasicSalary(),
+                        payroll.getNetSalary(),
+                        payroll.getPaymentStatus());
+                }
+                System.out.println();
+            }
+        }
     }
     
     private void processPayment() {
         System.out.println("\n=== Process Payment ===");
-        // Implementation for processing payment
+        
+        System.out.print("Enter payroll ID: ");
+        int payrollId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        
+        Payroll payroll = payrollService.getPayroll(payrollId);
+        if (payroll == null) {
+            System.out.println("Payroll record not found.");
+            return;
+        }
+        
+        if (!payroll.getPaymentStatus().equals("Pending")) {
+            System.out.println("This payroll has already been processed.");
+            return;
+        }
+        
+        System.out.println("\nPayment Methods:");
+        System.out.println("1. Bank Transfer");
+        System.out.println("2. Cash");
+        System.out.println("3. Cheque");
+        System.out.print("Select payment method (1-3): ");
+        
+        int methodChoice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        
+        String paymentMethod;
+        switch (methodChoice) {
+            case 1:
+                paymentMethod = "Bank Transfer";
+                break;
+            case 2:
+                paymentMethod = "Cash";
+                break;
+            case 3:
+                paymentMethod = "Cheque";
+                break;
+            default:
+                System.out.println("Invalid payment method.");
+                return;
+        }
+        
+        String bankAccountNumber = "";
+        String bankName = "";
+        if (paymentMethod.equals("Bank Transfer")) {
+            System.out.print("Enter bank account number: ");
+            bankAccountNumber = scanner.nextLine();
+            
+            System.out.print("Enter bank name: ");
+            bankName = scanner.nextLine();
+        }
+        
+        if (payrollService.processPayment(payrollId, paymentMethod, bankAccountNumber, bankName)) {
+            System.out.println("Payment processed successfully!");
+        } else {
+            System.out.println("Failed to process payment. Please try again.");
+        }
     }
     
     private void generateAttendanceReport() {
